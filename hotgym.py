@@ -103,11 +103,12 @@ def runHotgym():
     record = reader.next()
     print record
     record1 = reader.next()
-    timestamp1 = time.mktime(datetime.datetime.strptime(record1[0], "%y/%d/%m %H:%M").timetuple())
+    #timestamp1 = datetime.datetime.strptime(record1[0], "%m/%d/%y %H:%M")
+    timestamp1 = time.mktime(datetime.datetime.strptime(record1[0], "%m/%d/%y %H:%M").timetuple())
     print timestamp1
     record2 = reader.next()
     print record2[0], record2[1]
-    print record2[0]-record1[0]
+    #print record2[0]-record1[0]
     for i, record in enumerate(reader, start=1):
       modelInput = dict(zip(headers, record))
       modelInput["consumption"] = float(modelInput["consumption"])
