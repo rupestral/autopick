@@ -40,24 +40,39 @@ from py2neo import neo4j
 graph_db = neo4j.GraphDatabaseService()
 graph_db.clear();
 
+_CSVDATA_PATH = "extra/hotgym/rec-center-hourly.csv"
 
+_NUM_DBRECORDS = 100
 
-query = neo4j.CypherQuery(graph_db, "CREATE (a {name:{name_a}})-[ab:KNOWS]->(b {name:{name_b}})"
-                              "RETURN a, b, ab")
-a, b, ab = query.execute(name_a="Alice", name_b="Bob").data[0]
+with open (findDataset(_CSVDATA_PATH)) as fin:
+    reader = csv.reader(fin)
+    headers = reader.next()
+    print headers
+    record = reader.next()
+    print record
+    record = reader.next()
+    print record
+    record1 = reader.next()
+    timestamp1 = time.mktime(datetime.datetime.strptime(record1[0], "%m/%d/%y %H:%M").timetuple())
+    print timestamp1
+    record2 = reader.next()
+    timestamp2 = time.mktime(datetime.datetime.strptime(record2[0], "%m/%d/%y %H:%M").timetuple())
+    print record2[0], record2[1]
+    print timestamp2-timestamp1
+    for i, record in enumerate(reader, start=1):
 
-print a, b, ab
+        print record[0],record[1]
+        node_timeserie = time.mktime(datetime.datetime.strptime(record[0], "%m/%d/%y %H:%M").timetuple())
+        print node_timeserie
+        query = neo4j.CypherQuery(graph_db, "CREATE (n {timeserie:{record_time}, data:{record_data}})")
+        query.execute(record_time=node_timeserie, record_data=record[1])
 
-query = neo4j.CypherQuery(graph_db, "MATCH (a)-[r]-(b) RETURN a,r,b")
+        isLast = i == _NUM_DBRECORDS
+        if i % 100 == 0 or isLast:
+            print "100 nodes written in db"
+        if isLast:
+            break
 
-result = query.execute_one()
-
-print result[2]
-
-
-query = neo4j.CypherQuery(graph_db,"MATCH (a)-[r]-(b) RETURN a,r,b")
-for record in query.stream():
-    print record[0], record[1],record[2]
 
 ###################
 
@@ -103,12 +118,12 @@ def runHotgym():
     record = reader.next()
     print record
     record1 = reader.next()
-    #timestamp1 = datetime.datetime.strptime(record1[0], "%m/%d/%y %H:%M")
     timestamp1 = time.mktime(datetime.datetime.strptime(record1[0], "%m/%d/%y %H:%M").timetuple())
     print timestamp1
     record2 = reader.next()
+    timestamp2 = time.mktime(datetime.datetime.strptime(record2[0], "%m/%d/%y %H:%M").timetuple())
     print record2[0], record2[1]
-    #print record2[0]-record1[0]
+    print timestamp2-timestamp1
     for i, record in enumerate(reader, start=1):
       modelInput = dict(zip(headers, record))
       modelInput["consumption"] = float(modelInput["consumption"])
